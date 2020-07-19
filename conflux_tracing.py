@@ -1,4 +1,8 @@
 #!/usr/bin/env python3
+import sys
+import os
+cur_dir = os.path.dirname(os.path.realpath(__file__))
+sys.path.append(cur_dir + "/../")
 import random
 import threading
 import json

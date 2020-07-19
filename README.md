@@ -1,8 +1,8 @@
-# Rigorous Testing Tools for Conflux
+# Testing Toolkits for Conflux
 
 Ensuring the correctness of a blockchain system like Conflux is a challenging
-task. The Conflux Rust implementation repository comes with several rigorous
-testing tools and scripts.
+task. This repository comes with several rigorous
+testing tools and scripts. This repository is a submodule of `Conflux-Rust` at `tests/extra-test-toolkits`. 
 
 Note that in some terminals, the default maximum number of open file
 descriptors may not be enough. This is especially true if you are using Mac
@@ -13,31 +13,20 @@ number as follows:
 $ ulimit -n 22288
 ```
 
-## Unit Tests and Integration Tests
-
-Unit tests come together with the rust code. It can be invoked via `cargo test
---release --all` after Conflux being complied from the source code. See the
-[Getting Started](https://conflux-chain.github.io/conflux-doc/get_started/)
-page for more information. Integration tests are python test scripts ended with
-`_test.py` in the `tests/scripts` directory. After compiled the *release*
-version of the Conflux from code. One can run `tests/test_all.py` to run all
-integration tests together. These tests are executed routinely for every commit
-to the Conflux Rust implementation. 
-
 ## Consensus Fuzzing Tool
 
-Inside the directory `core/benchmark/consensus/test`, there is a random fuzzing
+Inside the directory `consensus_fuzzer`, there is a random fuzzing
 tool for the consensus component. It works as follows.
-`core/benchmark/consensus/test/gen-random-graph.cpp` is a slow C++
+`consensus_fuzzer/gen-random-graph.cpp` is a slow C++
 implementation of the Conflux TreeGraph consensus algorithm together with a
 random graph generator that generates random TreeGraph blocks in a special
-format. `consensus_bench` is capable of processing this input format, run the
+format. `consensus_bench` in the `Conflux-Rust` repository is capable of processing this input format, run the
 Conflux consensus, and compare the results with the slow C++ implementation.
-`iter-gen-random.py` is a python script that iteratively invoke the
+`consensus_fuzzer/iter-gen-random.py` is a python script that iteratively invoke the
 generation-processing-comparing process. To run this fuzzing tool:
 
 ```bash
-$ cd core/benchmark/consensus/test
+$ cd tests/extra-test-toolkits/consensus_fuzzer
 $ g++ -O2 -o gen-random-graph gen-random-graph.cpp
 $ ./iter-gen-random.py 10000 3 30 10 10 100
 ```
@@ -67,7 +56,7 @@ You should remove these directories manually.
 
 ## Random Tracing Test
 
-`tests/conflux_tracing.py` is a random testing script with the failure
+`tests/extra-test-toolkits/conflux_tracing.py` is a random testing script with the failure
 injection capability. It will start a Conflux network with a fixed number of
 nodes and inject node crashes, db crashes, and node restarts during. During the
 running, it keep fetches states from different node and verify that these nodes
@@ -76,7 +65,7 @@ you need to first compile the release version of the Conflux Rust implementation
 from the source code. Then you can invoke the script as follows:
 
 ```bash
-$ tests/conflux_tracing.py run
+$ tests/extra-test-toolkits/conflux_tracing.py run
 ```
 
 The python script will then start 10 different instances together with a mock
@@ -91,7 +80,7 @@ want to clean them manually.
 
 ## Transaction Propagation and Performance Test
 
-`tests/scripts/one_click.sh` together with the remaining bash scripts in the
+`tests/extra-test-toolkits/scripts/one_click.sh` together with the remaining bash scripts in the
 same directory provide an automatic deployment of Conflux network on AWS for
 testing the simple payment TPS and transaction pool performance. You can run
 this test as follows:
@@ -110,7 +99,7 @@ from the official Conflux-rust repo from the GitHub.
 4. Run the following command:
 
 ```bash
-$ cd tests/scripts
+$ cd tests/extra-test-toolkits/scripts
 $ ./one_click.sh key-pair-name 20 branch-name [repo-name]
 ```
 
@@ -165,7 +154,7 @@ thousand blocks per second in the normal scenarios. However, if the TreeGraph
 is unstable and it contains a lot of forks, the consensus component may fail
 back to slow routines. Its performance under such unstable scenarios is
 critical because it corresponds to the catch-up speed during DoS attacks.
-`tests/attack_bench` contains a list of python scripts to benchmark the
+`tests/extra-test-toolkits/attack_bench` contains a list of python scripts to benchmark the
 consensus performance under attack scenarios:
 
 1. `fork_same_height_merge.py` creates a unstable TreeGraph with roughly 95000

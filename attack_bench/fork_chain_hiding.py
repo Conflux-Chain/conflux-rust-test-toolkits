@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 import os, sys
-sys.path.insert(1, os.path.join(sys.path[0], '..'))
+sys.path.insert(1, os.path.join(sys.path[0], '../..'))
 
 from test_framework.test_framework import ConfluxTestFramework
 from test_framework.util import *

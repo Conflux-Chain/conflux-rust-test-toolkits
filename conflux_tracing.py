@@ -128,7 +128,7 @@ class ConsensusBlockStatus(object):
     def __init__(self, json_data):
         self.hash = json_data['blockHash']
         self.best_block_hash = json_data['bestBlockHash']
-        self.block_status = BlockStatus(json_data['blockStatus'])
+        self.block_status = BlockStatus(int(json_data['blockStatus'], 16))
         self.era_block_hash = json_data['eraBlockHash']
         self.adaptive = json_data['adaptive']
 
@@ -464,7 +464,7 @@ class ConfluxTracing(ConfluxTestFramework):
             "generate_tx_period_us": "100000",
             "enable_state_expose": "true",
             "era_epoch_count": 100,
-            "dev_snapshot_epoch_count": 50,
+            "dev_snapshot_epoch_count": 20,
             "adaptive_weight_beta": "1",
             "timer_chain_block_difficulty_ratio": "10",
             "timer_chain_beta": "40",

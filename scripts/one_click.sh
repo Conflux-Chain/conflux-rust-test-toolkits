@@ -27,11 +27,11 @@ run_latency_exp () {
     #2) Launch slave instances
     master_ip=`cat ips`
     slave_image=`cat slave_image`
-    ssh ubuntu@${master_ip} "cd ./conflux-rust/tests/scripts;rm exp.log;rm -rf ~/.ssh/known_hosts;./launch-on-demand.sh $slave_count $key_pair $slave_role $slave_image;"
+    ssh ubuntu@${master_ip} "cd ./conflux-rust/tests/extra-test-toolkits/scripts;rm exp.log;rm -rf ~/.ssh/known_hosts;./launch-on-demand.sh $slave_count $key_pair $slave_role $slave_image;"
 
     # The images already have the compiled binary setup in `setup_image.sh`,
     # but we can use the following to recompile if we have code updated after image setup.
-    #ssh ubuntu@${master_ip} "cd ./conflux-rust/tests/scripts;export RUSTFLAGS=\"-g\" && cargo build --release ;\
+    #ssh ubuntu@${master_ip} "cd ./conflux-rust/tests/extra-test-toolkits/scripts;export RUSTFLAGS=\"-g\" && cargo build --release ;\
     #parallel-scp -O \"StrictHostKeyChecking no\" -h ips -l ubuntu -p 1000 ../../target/release/conflux ~ |grep FAILURE|wc -l;"
 
     #4) Run experiments
@@ -39,7 +39,7 @@ run_latency_exp () {
     if [ $enable_flamegraph = true ]; then
         flamegraph_option="--enable-flamegraph"
     fi
-    ssh -tt ubuntu@${master_ip} "cd ./conflux-rust/tests/scripts;python3 ./exp_latency.py \
+    ssh -tt ubuntu@${master_ip} "cd ./conflux-rust/tests/extra-test-toolkits/scripts;python3 ./exp_latency.py \
     --vms $slave_count \
     --batch-config \"$exp_config\" \
     --storage-memory-gb 16 \
@@ -62,7 +62,7 @@ run_latency_exp () {
     # Download results
     archive_file="exp_stat_latency.tgz"
     log="exp_stat_latency.log"
-    scp ubuntu@${master_ip}:~/conflux-rust/tests/scripts/${archive_file} .
+    scp ubuntu@${master_ip}:~/conflux-rust/tests/extra-test-toolkits/scripts/${archive_file} .
     tar xfvz $archive_file
     cat $log
     mv $archive_file ${archive_file}.`date +%s`

@@ -30,6 +30,7 @@ n=$1
 keypair=$2
 role=$3
 res=`aws ec2 run-instances --image-id $image --count $n --key-name $keypair --instance-type $type --security-group-ids sg-0345bbb6934681ea1 --subnet-id subnet-a5cfe3dc --block-device-mapping DeviceName=/dev/sda1,Ebs={VolumeSize=250} --tag-specifications "ResourceType=instance,Tags=[{Key=role,Value=$role},{Key=Name,Value=$type-$image}]"`
+echo "$res"
 echo $res | jq ".Instances[].InstanceId" | tr -d '"' > instances
 
 num_created=`cat instances | wc -l`

@@ -26,11 +26,11 @@ run_balance_attack () {
     #2) Launch slave instances
     master_ip=`head -n1 ips`
     slave_image=`cat slave_image`
-    ssh ubuntu@${master_ip} "cd ./conflux-rust/tests/scripts;
+    ssh ubuntu@${master_ip} "cd ./conflux-rust/tests/extra-test-toolkits/scripts;
       rm -rf ~/.ssh/known_hosts;./launch-on-demand.sh $slave_count $key_pair $slave_role $slave_image;"
 
     #3) compile, and distributed binary to slaves: You can make change on the MASTER node and run the changed code against SLAVES nodes.
-    ssh ubuntu@${master_ip} "cd ./conflux-rust/tests/scripts;
+    ssh ubuntu@${master_ip} "cd ./conflux-rust/tests/extra-test-toolkits/scripts;
       cargo build --release --features \"deadlock_detection\";
       parallel-scp -O \"StrictHostKeyChecking no\" -h ips -l \
         ubuntu -p 1000 ../../target/release/conflux ~ |grep FAILURE|wc -l;"
@@ -40,7 +40,7 @@ run_balance_attack () {
     if [ $enable_flamegraph = true ]; then
         flamegraph_option="--enable-flamegraph"
     fi
-    ssh ubuntu@${master_ip} "cd ./conflux-rust/tests/scripts;
+    ssh ubuntu@${master_ip} "cd ./conflux-rust/tests/extra-test-toolkits/scripts;
       python3 ../balance_attack/balance_attack_aws.py --generation-period-ms 250 --num-blocks 240 \
         --storage-memory-gb 16 --bandwidth 20 --tps 4000 --txs-per-block 1000 \
         --enable-tx-propagation --send-tx-period-ms 200 $flamegraph_option"

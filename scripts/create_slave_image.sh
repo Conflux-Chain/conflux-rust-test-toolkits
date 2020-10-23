@@ -14,7 +14,7 @@ branch="${2:-master}"
 repo="${3:-https://github.com/Conflux-Chain/conflux-rust}"
 
 echo "create an instance to make slave image ..."
-#$SCRIPT_DIR/launch-on-demand.sh 1 $key_pair ${key_pair}_master
+$SCRIPT_DIR/launch-on-demand.sh 1 $key_pair ${key_pair}_master
 
 echo "setup before making slave image ..."
 master_ip=`cat ips`

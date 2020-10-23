@@ -14,7 +14,7 @@ scp -o "StrictHostKeyChecking no" throttle_bitcoin_bandwidth.sh $ip:~
 scp -o "StrictHostKeyChecking no" remote_start_conflux.sh $ip:~
 scp -o "StrictHostKeyChecking no" remote_collect_log.sh $ip:~
 scp -o "StrictHostKeyChecking no" stat_latency_map_reduce.py $ip:~
-scp -o "StrictHostKeyChecking no" ../../target/release/conflux $ip:~
+scp -o "StrictHostKeyChecking no" ../../../target/release/conflux $ip:~
 
 echo "install tools ..."
 ssh -o "StrictHostKeyChecking no" $ip "sudo apt install iotop -y"

@@ -33,7 +33,7 @@ run_balance_attack () {
     ssh ubuntu@${master_ip} "cd ./conflux-rust/tests/extra-test-toolkits/scripts;
       cargo build --release --features \"deadlock_detection\";
       parallel-scp -O \"StrictHostKeyChecking no\" -h ips -l \
-        ubuntu -p 1000 ../../target/release/conflux ~ |grep FAILURE|wc -l;"
+        ubuntu -p 1000 ../../../target/release/conflux ~ |grep FAILURE|wc -l;"
 
     #4) Run experiments
     flamegraph_option=""

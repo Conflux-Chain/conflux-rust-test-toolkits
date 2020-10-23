@@ -1,15 +1,14 @@
 #!/usr/bin/env python3
+import os, sys
+sys.path.insert(1, os.path.join(sys.path[0], '../..'))
 
-import os
 import toml
 import threading
 import time
 import random
 import eth_utils
-import sys
 from jsonrpcclient.exceptions import ReceivedErrorResponseError
 
-sys.path.append("..")
 from test_framework.authproxy import JSONRPCException
 from conflux.rpc import RpcClient
 from conflux.utils import priv_to_addr

@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
+import os, sys
+sys.path.insert(1, os.path.join(sys.path[0], '../..'))
 
-import os
-import sys
 import dateutil.parser
 import json
 import enum

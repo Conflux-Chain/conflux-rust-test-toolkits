@@ -1,4 +1,7 @@
 #!/usr/bin/env python3
+import sys, os
+sys.path.insert(1, os.path.dirname(sys.path[0]))
+
 from eth_utils import decode_hex
 import conflux.config
 

@@ -1,4 +1,6 @@
 #!/usr/bin/env python3
+import sys, os
+sys.path.insert(1, os.path.dirname(sys.path[0]))
 from argparse import ArgumentParser
 from http.client import CannotSendRequest
 

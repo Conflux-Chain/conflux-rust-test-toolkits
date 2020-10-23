@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
+import os, sys
+sys.path.insert(1, os.path.join(sys.path[0], '../..'))
 
 import csv
-import os
-import sys
 import dateutil.parser
 import time
 from concurrent.futures import ThreadPoolExecutor

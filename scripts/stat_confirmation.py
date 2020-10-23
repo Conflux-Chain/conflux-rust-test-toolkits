@@ -1,11 +1,11 @@
 #!/usr/bin/env python3
+import os, sys
+sys.path.insert(1, os.path.join(sys.path[0], '../..'))
 
 from stat_latency_map_reduce import LogAggregator, BlockLatencyType, Percentile, parse_value, Statistics
 from stat_latency import Table
 import pickle
-import sys
 from queue import Queue
-import os
 import math
 
 def accept(t, lambda_n, sib_tree_size, max_n, r):

@@ -3,7 +3,7 @@
 # allow imports from parent directory
 # source: https://stackoverflow.com/a/11158224
 import os, sys
-sys.path.insert(1, os.path.join(sys.path[0], '..'))
+sys.path.insert(1, os.path.join(sys.path[0], '../..'))
 
 from argparse import ArgumentParser
 from remote_simulate import RemoteSimulate

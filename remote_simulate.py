@@ -1,4 +1,6 @@
 #!/usr/bin/env python3
+import sys, os
+sys.path.insert(1, os.path.dirname(sys.path[0]))
 
 from argparse import ArgumentParser, SUPPRESS
 from collections import Counter
@@ -14,7 +16,6 @@ from test_framework.test_framework import ConfluxTestFramework, OptionHelper
 from test_framework.util import *
 import time
 from scripts.stat_latency_map_reduce import Statistics
-import os
 
 CONFIRMATION_THRESHOLD = 0.1**6 * 2**256
 

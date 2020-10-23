@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
-
+import sys, os
+sys.path.insert(1, os.path.dirname(sys.path[0]))
 from conflux.utils import convert_to_nodeid, priv_to_addr, parse_as_int
 from test_framework.block_gen_thread import BlockGenThread
 from test_framework.blocktools import  create_transaction

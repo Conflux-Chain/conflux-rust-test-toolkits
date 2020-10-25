@@ -1,10 +1,8 @@
 #!/usr/bin/env python3
 import os, sys
-
-from test_framework.block_gen_thread import PoWGenerateThread
-
 sys.path.insert(1, os.path.join(sys.path[0], '../..'))
 
+from test_framework.block_gen_thread import PoWGenerateThread
 from conflux.utils import parse_as_int
 from eth_utils import decode_hex
 from conflux.messages import NewBlock

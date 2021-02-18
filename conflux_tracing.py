@@ -467,12 +467,15 @@ class ConfluxTracing(ConfluxTestFramework):
             "timer_chain_block_difficulty_ratio": "10",
             "timer_chain_beta": "40",
             "anticone_penalty_ratio": "10",
+            "dev_allow_phase_change_without_peer": "false",
+            "additional_maintained_snapshot_count": "10",
         }
 
     def setup_nodes(self):
         self.add_nodes(self.num_nodes, auto_recovery=True, recovery_timeout=300)
         if self.options.archive:
-            self.start_nodes()
+            for i in range(self.num_nodes):
+                self.start_node(i, phase_to_wait=None)
         else:
             self.start_node(0)
             for i in range(1, self.num_nodes):
@@ -482,7 +485,7 @@ class ConfluxTracing(ConfluxTestFramework):
         self.log.info("setup nodes ...")
         self.setup_nodes()
         self.log.info("connect peers ...")
-        connect_sample_nodes(self.nodes, self.log)
+        connect_sample_nodes(self.nodes, self.log, sample=int(self.num_nodes / 2) + 1)
         self.log.info("sync up with blocks among nodes ...")
         sync_blocks(self.nodes)
         self.log.info("start P2P connection ...")

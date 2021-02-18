@@ -1,5 +1,8 @@
 #!/usr/bin/env python3
 import sys, os
+
+from conflux.rpc import RpcClient
+
 sys.path.insert(1, os.path.dirname(sys.path[0]))
 
 from eth_utils import decode_hex
@@ -156,7 +159,7 @@ class SingleBench(ConfluxTestFramework):
     def check_account(self, k, balance_map):
         addr = eth_utils.encode_hex(priv_to_addr(k))
         try:
-            balance = parse_as_int(self.node.cfx_getBalance(addr))
+            balance = RpcClient(self.node).get_balance(addr)
         except Exception as e:
             self.log.info("Fail to get balance, error=%s", str(e))
             time.sleep(0.1)

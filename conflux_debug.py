@@ -1,5 +1,8 @@
 #!/usr/bin/env python3
 import sys, os
+
+from conflux.rpc import RpcClient
+
 sys.path.insert(1, os.path.dirname(sys.path[0]))
 from conflux.utils import convert_to_nodeid, priv_to_addr, parse_as_int
 from test_framework.block_gen_thread import BlockGenThread
@@ -31,14 +34,12 @@ class MessageTest(ConfluxTestFramework):
         default_node.wait_for_status()
 
         # Start rpc connection
-        self.rpc = get_simple_rpc_proxy(
-            "http://127.0.0.1:12537")
-        challenge = random.randint(0, 2**32-1)
-        signature = self.rpc.getnodeid(list(int_to_bytes(challenge)))
-        node_id, x, y = convert_to_nodeid(signature, challenge)
+        self.rpc_client = RpcClient(get_simple_rpc_proxy(
+            "http://127.0.0.1:12537"))
+        node_id = self.rpc_client.get_node_id()
         self.log.info("get nodeid %s", eth_utils.encode_hex(node_id))
 
-        block_gen_thread = BlockGenThread([self.rpc], self.log, num_txs = 100, interval_fixed=0.2)
+        block_gen_thread = BlockGenThread([self.rpc_client.node], self.log, num_txs = 100, interval_fixed=0.2)
         block_gen_thread.start()
         genesis_key = default_config["GENESIS_PRI_KEY"]
         balance_map = {genesis_key: default_config["TOTAL_COIN"]}
@@ -91,7 +92,7 @@ class MessageTest(ConfluxTestFramework):
     def check_account(self, k, balance_map):
         addr = eth_utils.encode_hex(priv_to_addr(k))
         try:
-            balance = parse_as_int(self.rpc.cfx_getBalance(addr))
+            balance = self.rpc_client.get_balance(addr)
         except Exception as e:
             self.log.info("Fail to get balance, error=%s", str(e))
             return False

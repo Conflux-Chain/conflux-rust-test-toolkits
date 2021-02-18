@@ -18,7 +18,7 @@ class HardForkTest(ConfluxTestFramework):
     def set_test_params(self):
         self.num_nodes = 2
         self.conf_parameters = {
-            "phase2_transition_height": f"{FORK_HEIGHT}",
+            "tanzanite_transition_height": f"{FORK_HEIGHT}",
         }
 
     def setup_network(self):
@@ -40,6 +40,7 @@ class HardForkTest(ConfluxTestFramework):
         new_fork = new_node.generate_empty_blocks(2 * FORK_HEIGHT)
         wait_until(lambda: old_node.get_block_count() == 4 * FORK_HEIGHT)
         wait_until(lambda: new_node.get_block_count() == 3 * FORK_HEIGHT)
+        wait_until(lambda: new_node2.get_block_count() == 3 * FORK_HEIGHT)
         for h in new_fork:
             b = new_node.block_by_hash(h)
             assert_equal(int(b["blame"], 0), 0)

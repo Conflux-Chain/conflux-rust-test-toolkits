@@ -1,11 +1,11 @@
 #!/usr/bin/env python3
 import sys, os
 
-from conflux.rpc import RpcClient
 
 sys.path.insert(1, os.path.dirname(sys.path[0]))
 
 from eth_utils import decode_hex
+from conflux.rpc import RpcClient
 import conflux.config
 
 '''

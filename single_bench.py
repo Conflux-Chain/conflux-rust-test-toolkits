@@ -44,10 +44,11 @@ class SingleBench(ConfluxTestFramework):
     def run_test(self):
         # Start mininode connection
         self.node = self.nodes[0]
+        genesis = self.node.cfx_getBlockByEpochNumber("0x0", False)["hash"]
         n_connections = 4
         p2p_connections = []
         for node in range(n_connections):
-            conn = DefaultNode()
+            conn = DefaultNode(genesis)
             p2p_connections.append(conn)
             self.node.add_p2p_connection(conn)
         network_thread_start()

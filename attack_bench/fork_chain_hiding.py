@@ -27,7 +27,7 @@ class ForkChainTest(ConfluxTestFramework):
         n_generate_batch = 1000
         n_attack_blocks = 15000
         self.log.info(f"Attacker start to prepare {n_attack_blocks} blocks")
-        attack_blocks = create_chain_of_blocks(parent_hash=self.nodes[0].p2p.genesis.hash, parent_height=0, count=n_attack_blocks)
+        attack_blocks = create_chain_of_blocks(parent_hash=self.nodes[0].p2p.genesis, parent_height=0, count=n_attack_blocks)
         self.log.info("Honest node generate")
         for _ in range(int(20000/n_generate_batch)):
             batch_generate(self.nodes[0], n_generate_batch, self.log)

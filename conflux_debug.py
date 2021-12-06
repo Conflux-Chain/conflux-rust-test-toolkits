@@ -22,8 +22,9 @@ class MessageTest(ConfluxTestFramework):
 
     def run_test(self):
 
+        genesis = self.nodes[0].cfx_getBlockByEpochNumber("0x0", False)["hash"]
         # Start mininode connection
-        default_node = DefaultNode()
+        default_node = DefaultNode(genesis)
         self.node = default_node
         kwargs = {}
         args = {}

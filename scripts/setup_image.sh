@@ -24,9 +24,11 @@ apt_wait () {
 sudo apt update
 echo "Wait for apt to be unlocked"
 apt_wait
-sudo apt install -y iotop iftop htop clang git jq pssh libsqlite3-dev xutils-dev cmake pkg-config libssl-dev
+sudo apt install -y iotop iftop htop clang git jq pssh libsqlite3-dev xutils-dev cmake pkg-config libssl-dev python3-pip autoconf libtool
+pip3 install --upgrade pip
 pip3 install prettytable
-pip3 install jsonrpcclient
+pip3 install jsonrpcclient==3.3.6
+pip3 install python-dateutil
 
 sudo apt install -y linux-tools-common
 sudo apt install -y linux-tools-`uname -r`

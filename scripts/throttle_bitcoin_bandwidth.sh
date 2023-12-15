@@ -6,7 +6,7 @@ DEV=ens5
 if [ "`which cgcreate`" = "" ]; then
     echo "Install cgroup ..."
     sudo apt update
-    sudo apt install -y cgroup-bin
+    sudo apt install -y cgroup-tools
     sudo modprobe cls_cgroup
 fi
 

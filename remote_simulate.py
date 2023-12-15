@@ -77,7 +77,12 @@ class RemoteSimulate(ConfluxTestFramework):
         send_tx_period_ms = 1300,
         txgen_account_count = 1000,
         tx_pool_size = conflux.config.default_conflux_conf["tx_pool_size"],
-        max_block_size_in_bytes = conflux.config.default_config["MAX_BLOCK_SIZE_IN_BYTES"]
+        max_block_size_in_bytes = conflux.config.default_config["MAX_BLOCK_SIZE_IN_BYTES"],
+        hydra_transition_number = 4294967295,
+        hydra_transition_height = 4294967295,
+        pos_reference_enable_height = 4294967295,
+        cip43_init_end_number = 4294967295,
+        sigma_fix_transition_number = 4294967295
     )
 
     def add_options(self, parser:ArgumentParser):

@@ -147,8 +147,9 @@ class Block:
     def receive(log_line:str, latency_type:BlockLatencyType):
         log_timestamp = parse_log_timestamp(log_line)
         block = Block.__parse_block_header__(log_line)
-        block.txs = int(parse_value(log_line, "tx_count=", ","))
-        block.size = int(parse_value(log_line, "block_size=", None))
+        if latency_type is not BlockLatencyType.Cons:
+            block.txs = int(parse_value(log_line, "tx_count=", ","))
+            block.size = int(parse_value(log_line, "block_size=", None))
         block.latencies[latency_type.name].append(round(log_timestamp - block.timestamp, 2))
         return block
 

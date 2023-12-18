@@ -16,15 +16,18 @@ from test_framework.test_framework import ConfluxTestFramework, OptionHelper
 from test_framework.util import *
 import time
 from scripts.stat_latency_map_reduce import Statistics
+import platform
 
 CONFIRMATION_THRESHOLD = 0.1**6 * 2**256
 
 def execute(cmd, retry, cmd_description):
     while True:
         ret = os.system(cmd)
-        exit_code = os.waitstatus_to_exitcode(ret)
-        print("ret {} waitstatus_to_exitcode {}", ret, exit_code)
-        if exit_code == 0:
+
+        if platform.system().lower() == "linux":
+            ret = os.waitstatus_to_exitcode(ret)
+            
+        if ret == 0:
             break
 
         print("Failed to {}, return code = {}, retry = {} ...".format(cmd_description, ret, retry))

@@ -26,7 +26,7 @@ def execute(cmd, retry, cmd_description):
 
         if platform.system().lower() == "linux":
             ret = os.waitstatus_to_exitcode(ret)
-            
+
         if ret == 0:
             break
 
@@ -81,6 +81,7 @@ class RemoteSimulate(ConfluxTestFramework):
         txgen_account_count = 1000,
         tx_pool_size = conflux.config.default_conflux_conf["tx_pool_size"],
         max_block_size_in_bytes = conflux.config.default_config["MAX_BLOCK_SIZE_IN_BYTES"],
+        # pos
         hydra_transition_number = 4294967295,
         hydra_transition_height = 4294967295,
         pos_reference_enable_height = 4294967295,

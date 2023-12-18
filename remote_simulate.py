@@ -16,12 +16,17 @@ from test_framework.test_framework import ConfluxTestFramework, OptionHelper
 from test_framework.util import *
 import time
 from scripts.stat_latency_map_reduce import Statistics
+import platform
 
 CONFIRMATION_THRESHOLD = 0.1**6 * 2**256
 
 def execute(cmd, retry, cmd_description):
     while True:
         ret = os.system(cmd)
+
+        if platform.system().lower() == "linux":
+            ret = os.waitstatus_to_exitcode(ret)
+
         if ret == 0:
             break
 
@@ -75,7 +80,14 @@ class RemoteSimulate(ConfluxTestFramework):
         send_tx_period_ms = 1300,
         txgen_account_count = 1000,
         tx_pool_size = conflux.config.default_conflux_conf["tx_pool_size"],
-        max_block_size_in_bytes = conflux.config.default_config["MAX_BLOCK_SIZE_IN_BYTES"]
+        max_block_size_in_bytes = conflux.config.default_config["MAX_BLOCK_SIZE_IN_BYTES"],
+        # pos
+        hydra_transition_number = 4294967295,
+        hydra_transition_height = 4294967295,
+        pos_reference_enable_height = 4294967295,
+        cip43_init_end_number = 4294967295,
+        sigma_fix_transition_number = 4294967295,
+        public_rpc_apis="cfx,debug,test,pubsub,trace"
     )
 
     def add_options(self, parser:ArgumentParser):

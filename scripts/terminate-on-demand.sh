@@ -15,8 +15,11 @@ if [[ -f slave_image ]]; then
     aws ec2 deregister-image --image-id $image_id
     for id in $snapshot_ids
     do
-        echo "delete snapshot $id"
-        aws ec2 delete-snapshot --snapshot-id $id
+        if [ "$id" != null ]
+        then
+            echo "delete snapshot $id"
+            aws ec2 delete-snapshot --snapshot-id $id
+        fi
     done
 fi
 

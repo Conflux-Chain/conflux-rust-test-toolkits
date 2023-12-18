@@ -6,7 +6,7 @@ DEV=ens5
 if [ "`which cgcreate`" = "" ]; then
     echo "Install cgroup ..."
     sudo apt update
-    sudo apt install -y cgroup-bin
+    sudo apt install -y cgroup-tools
     sudo modprobe cls_cgroup
 fi
 
@@ -17,7 +17,7 @@ then
     sudo mount -t cgroup net_cls -o net_cls /sys/fs/cgroup/net_cls/
 fi
 
-sudo tc qdisc del dev $DEV
+sudo tc qdisc del dev $DEV root
 sudo tc qdisc add dev $DEV root handle 1: htb
 sudo tc filter add dev $DEV parent 1: handle 1: cgroup
 

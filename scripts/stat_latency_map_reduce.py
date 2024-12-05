@@ -313,7 +313,7 @@ class NodeLogMapper:
             block = Block.receive(line, BlockLatencyType.Cons)
             Block.add_or_merge(self.blocks, block)
 
-        if "Block events record complete" in line:
+        if "Block events record complete" in line or "Block events record partially complete" in line:
             records = BlockEventRecord.parse(line)
             if records is not None and self.blocks.get(records.hash) is not None:
                 self.blocks[records.hash].set_block_event_record(records)
@@ -490,11 +490,17 @@ class LogAggregator:
         return Statistics(data)
 
     def generate_latency_stat(self):
+        num_nodes = len(self.sync_cons_gap_stats)
+
         for b in self.blocks.values():
             for t in BlockLatencyType:
                 self.block_latency_stats[t.name][b.hash] = Statistics(b.get_latencies(t))
+
             for t in BlockEventRecordType:
-                self.block_latency_stats[t.name][b.hash] = Statistics(b.get_latencies(t))
+                latencies = b.get_latencies(t)
+                # Non-pivot block doesn't have event later than "ComputeEpoch".
+                if len(latencies) >= int(0.9 * num_nodes) or t.value <= BlockEventRecordType.ConsensusGraphReady.value:
+                    self.block_latency_stats[t.name][b.hash] = Statistics(b.get_latencies(t))
 
         num_nodes = len(self.sync_cons_gap_stats)
         for tx in self.txs.values():

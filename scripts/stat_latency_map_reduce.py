@@ -7,6 +7,7 @@ import json
 import enum
 import re
 from concurrent.futures import ThreadPoolExecutor
+from dataclasses import dataclass
 
 def parse_value(log_line:str, prefix:str, suffix:str):
     start = 0 if prefix is None else log_line.index(prefix) + len(prefix)
@@ -33,6 +34,42 @@ class BlockEventRecordType(enum.Enum):
     NotifyTxPool = 6
     TxPoolUpdated = 7
 
+def _default_latency_keys():
+    for t in BlockLatencyType:
+        yield t
+    for t in BlockEventRecordType:
+        yield t
+
+def only_pivot_event(t) -> bool:
+    return type(t) is BlockEventRecordType and t.value >= t.ComputeEpoch.value
+
+default_latency_keys = set(_default_latency_keys())
+
+@dataclass(frozen=True)
+class BlockCustomEventRecordType:
+    type_name: str
+    stage: int
+
+    @staticmethod
+    def parse(text):
+        pattern = r"custom_([a-zA-Z0-9_]+)_([0-9]+)"
+        match = re.match(pattern, text)
+        if match:
+            type_name = BlockCustomEventRecordType.snake_to_camel(match.group(1))  # 中间段
+            stage = int(match.group(2))    # 末尾段
+            return BlockCustomEventRecordType(type_name, stage)
+        else:
+            return None
+        
+    @property
+    def name(self):
+        return f"{self.type_name}{self.stage}"
+        
+    @staticmethod
+    def snake_to_camel(snake_str):
+        components = snake_str.split('_')
+        # 将第一个单词保留为小写，其余单词首字母大写
+        return ''.join(word.capitalize() for word in components)
 
 
 class Transaction:
@@ -133,9 +170,34 @@ class BlockEventRecord:
         self.records[BlockEventRecordType.SyncGraph] = (records["sync_graph"] - records["body_ready"]) / BASE
         self.records[BlockEventRecordType.ConsensusGraphStart] = (records["consensys_graph_insert"] - records["sync_graph"]) / BASE
         self.records[BlockEventRecordType.ConsensusGraphReady] = (records["consensys_graph_ready"] - records["consensys_graph_insert"]) / BASE
-        self.records[BlockEventRecordType.ComputeEpoch] = (records["compute_epoch"] - records["consensys_graph_ready"]) / BASE
-        self.records[BlockEventRecordType.NotifyTxPool] = (records["notify_tx_pool"] - records["compute_epoch"]) / BASE
-        self.records[BlockEventRecordType.TxPoolUpdated] = (records["tx_pool_updated"] - records["notify_tx_pool"]) / BASE
+        if "compute_epoch" in records:
+            self.records[BlockEventRecordType.ComputeEpoch] = (records["compute_epoch"] - records["consensys_graph_ready"]) / BASE
+            self.records[BlockEventRecordType.NotifyTxPool] = (records["notify_tx_pool"] - records["compute_epoch"]) / BASE
+            self.records[BlockEventRecordType.TxPoolUpdated] = (records["tx_pool_updated"] - records["notify_tx_pool"]) / BASE
+
+        custom_records = dict()
+        max_stage = 0
+
+        for (key, value) in records.items():
+            key_type = BlockCustomEventRecordType.parse(key)
+            if key_type is None:
+                continue
+            if key_type.type_name not in custom_records:
+                custom_records[key_type.type_name] = dict()
+            custom_records[key_type.type_name][key_type.stage] = value
+            max_stage = max(max_stage, key_type.stage)
+        
+
+        self.custom_records = dict()
+        for type_name in custom_records:
+            record_entry = custom_records[type_name]
+            for i in range(max_stage):
+                b = record_entry.get(i + 1)
+                a = record_entry.get(i)
+                if a is None or b is None:
+                    break
+                t = BlockCustomEventRecordType(type_name, i)
+                self.custom_records[t] = (b - a) / BASE
 
     @staticmethod
     def parse(text):
@@ -170,9 +232,7 @@ class Block:
 
         # [latency_type, latency]
         self.latencies = {}
-        for t in BlockLatencyType:
-            self.latencies[t.name] = []
-        for t in BlockEventRecordType:
+        for t in default_latency_keys:
             self.latencies[t.name] = []
 
     @staticmethod
@@ -214,11 +274,14 @@ class Block:
         if self.size == 0 and another.size > 0:
             self.size = another.size
 
-        for t in BlockLatencyType:
-            self.latencies[t.name].extend(another.latencies[t.name])
-
-        for t in BlockEventRecordType:
-            self.latencies[t.name].extend(another.latencies[t.name])
+        key_union = self.latencies.keys() | another.latencies.keys()
+        for k in key_union:
+            if k not in another.latencies:
+                continue
+            elif k not in self.latencies:
+                self.latencies[k] = another.latencies[k]
+            else:
+                self.latencies[k].extend(another.latencies[k])
 
     def set_block_event_record(self, record: BlockEventRecord):
         if self.hash != record.hash:
@@ -228,12 +291,23 @@ class Block:
             if t in record.records:
                 self.latencies[t.name].append(record.records[t])
 
+        for t in record.custom_records:
+            if t not in self.latencies:
+                self.latencies[t.name] = []
+            self.latencies[t.name].append(record.custom_records[t])
+
 
     def latency_count(self, t:BlockLatencyType):
         return len(self.latencies[t.name])
 
     def get_latencies(self, t:BlockLatencyType):
         return self.latencies[t.name]
+
+    def iter_non_default_latencies(self):
+        default_latency_key_names = [key.name for key in default_latency_keys]
+        for t in self.latencies:
+            if t not in default_latency_key_names:
+                yield (t, self.latencies[t])
 
 class Percentile(enum.Enum):
     Min = 0
@@ -247,6 +321,14 @@ class Percentile(enum.Enum):
     P99 = 0.99
     P999 = 0.999
     Max = 1
+    Cnt = "cnt"
+
+    @staticmethod
+    def node_percentiles():
+        for p in Percentile:
+            if p != Percentile.Cnt:
+                yield p
+
 
 class Statistics:
     def __init__(self, data:list, avg_ndigits=2, sort=True):
@@ -263,6 +345,8 @@ class Statistics:
                 value = sum(data) / data_len
                 if avg_ndigits is not None:
                     value = round(value, avg_ndigits)
+            elif p is Percentile.Cnt:
+                value = data_len
             else:
                 value = data[int((data_len - 1) * p.value)]
 
@@ -426,11 +510,9 @@ class LogAggregator:
         self.sync_cons_gap_stats = []
 
         # [latency_type, [block_hash, latency_stat]]
-        self.block_latency_stats = {}
-        for t in BlockLatencyType:
-            self.block_latency_stats[t.name] = {}
-        for t in BlockEventRecordType:
-            self.block_latency_stats[t.name] = {}
+        self.block_latency_stats = dict()
+        for t in default_latency_keys:
+            self.block_latency_stats[t.name] = dict()
         self.tx_latency_stats = {}
         self.tx_packed_to_block_latency = {}
         self.min_tx_packed_to_block_latency = []
@@ -493,14 +575,19 @@ class LogAggregator:
         num_nodes = len(self.sync_cons_gap_stats)
 
         for b in self.blocks.values():
-            for t in BlockLatencyType:
-                self.block_latency_stats[t.name][b.hash] = Statistics(b.get_latencies(t))
-
-            for t in BlockEventRecordType:
+            for t in default_latency_keys:
                 latencies = b.get_latencies(t)
-                # Non-pivot block doesn't have event later than "ComputeEpoch".
-                if len(latencies) >= int(0.9 * num_nodes) or t.value <= BlockEventRecordType.ConsensusGraphReady.value:
-                    self.block_latency_stats[t.name][b.hash] = Statistics(b.get_latencies(t))
+                if only_pivot_event(t) and len(latencies) < int(0.9 * num_nodes):
+                    continue
+                self.block_latency_stats[t.name][b.hash] = Statistics(latencies)
+
+            for (t_name, latencies) in b.iter_non_default_latencies():
+                if len(latencies) < int(0.9 * num_nodes):
+                    continue
+                if t_name not in self.block_latency_stats:
+                    self.block_latency_stats[t_name] = dict()
+                self.block_latency_stats[t_name][b.hash] = Statistics(latencies)
+
 
         num_nodes = len(self.sync_cons_gap_stats)
         for tx in self.txs.values():
@@ -525,13 +612,19 @@ class LogAggregator:
     def get_largest_min_tx_packed_latency_hash(self):
         return self.largest_min_tx_packed_latency_hash
 
-    def stat_block_latency(self, t:BlockLatencyType, p:Percentile):
+    def stat_block_latency(self, t, p:Percentile):
         data = []
 
-        for block_stat in self.block_latency_stats[t.name].values():
+        for block_stat in self.block_latency_stats[t].values():
             data.append(block_stat.get(p))
 
         return Statistics(data)
+    
+    def custom_block_latency_keys(self):
+        default_latency_key_names = [k.name for k in default_latency_keys]
+        keys = [k for k in self.block_latency_stats if k not in default_latency_key_names]
+        keys.sort()
+        return keys
 
     #for every transaction, self.tx_latency_stats contains a list of duration that every node receives the transaction, either by tx propagation or block .
     #stat_tx_latency stores for every transaction, the value that the transaction propagates P(n) number of nodes.

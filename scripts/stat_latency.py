@@ -51,7 +51,7 @@ class Table:
         row = [name]
 
         for p in Percentile:
-            if p is Percentile.Avg:
+            if p in [Percentile.Avg, Percentile.Cnt]:
                 row.append(stat.get(p))
             elif p is not Percentile.Min:
                 row.append(stat.get(p, data_format))
@@ -76,23 +76,29 @@ class LogAnalyzer:
         table = Table.new_matrix(self.stat_name)
 
         for t in BlockLatencyType:
-            for p in Percentile:
+            for p in Percentile.node_percentiles():
                 name = "block broadcast latency ({}/{})".format(t.name, p.name)
-                table.add_stat(name, "%.2f", self.agg.stat_block_latency(t, p))
+                table.add_stat(name, "%.2f", self.agg.stat_block_latency(t.name, p))
 
         for t in BlockEventRecordType:
-            for p in Percentile:
+            for p in Percentile.node_percentiles():
                 name = "block event elapsed ({}/{})".format(t.name, p.name)
-                table.add_stat(name, "%.2f", self.agg.stat_block_latency(t, p))
+                table.add_stat(name, "%.2f", self.agg.stat_block_latency(t.name, p))
+
+        for t_name in self.agg.custom_block_latency_keys():
+            for p in Percentile.node_percentiles():
+                name = "custom block event elapsed ({}/{})".format(t_name, p.name)
+                table.add_stat(name, "%.2f", self.agg.stat_block_latency(t_name, p))
+
 
         if len(self.agg.tx_latency_stats) != 0:
             #self.agg.stat_tx_latency prints: row: to propagate to P(n) number of nodes, column: Percentage of the transactions.
-            for p in Percentile:
+            for p in Percentile.node_percentiles():
                 name = "tx broadcast latency ({})".format(p.name)
                 table.add_stat(name, "%.2f", self.agg.stat_tx_latency(p))
 
             #row: the P(n) time the transaction is packed into a block. Column: Percentage of the transactions.
-            for p in Percentile:
+            for p in Percentile.node_percentiles():
                 name_tx_packed_to_block ="tx packed to block latency ({})".format(p.name)
                 table.add_stat(name_tx_packed_to_block, "%.2f", self.agg.stat_tx_packed_to_block_latency(p))
 

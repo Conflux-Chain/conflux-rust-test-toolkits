@@ -78,9 +78,11 @@ class RemoteSimulate(ConfluxTestFramework):
         egress_queue_capacity = 2048,
         genesis_secrets = "/home/ubuntu/genesis_secrets.txt",
         send_tx_period_ms = 1300,
-        txgen_account_count = 1000,
+        txgen_account_count = 100,
+        txgen_batch_size = 10,
         tx_pool_size = conflux.config.default_conflux_conf["tx_pool_size"],
         max_block_size_in_bytes = conflux.config.default_config["MAX_BLOCK_SIZE_IN_BYTES"],
+        execution_prefetch_threads = 8,
         # pos
         hydra_transition_number = 4294967295,
         hydra_transition_height = 4294967295,

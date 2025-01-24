@@ -52,18 +52,26 @@ class BlockCustomEventRecordType:
 
     @staticmethod
     def parse(text):
-        pattern = r"custom_([a-zA-Z0-9_]+)_([0-9]+)"
-        match = re.match(pattern, text)
+        match = re.match(r"custom_([a-zA-Z0-9_]+)_([0-9]+)", text)
         if match:
             type_name = BlockCustomEventRecordType.snake_to_camel(match.group(1))  # 中间段
             stage = int(match.group(2))    # 末尾段
             return BlockCustomEventRecordType(type_name, stage)
-        else:
-            return None
+        
+        match = re.match(r"gauge_([a-zA-Z0-9_]+)", text)
+        if match:
+            type_name = BlockCustomEventRecordType.snake_to_camel(match.group(1))  # 中间段
+            stage = -1
+            return BlockCustomEventRecordType(type_name, stage)
+        
+        return None
         
     @property
     def name(self):
-        return f"{self.type_name}{self.stage}"
+        if self.stage >= 0:
+            return f"{self.type_name}{self.stage}"
+        else:
+            return self.type_name
         
     @staticmethod
     def snake_to_camel(snake_str):
@@ -184,20 +192,28 @@ class BlockEventRecord:
                 continue
             if key_type.type_name not in custom_records:
                 custom_records[key_type.type_name] = dict()
-            custom_records[key_type.type_name][key_type.stage] = value
-            max_stage = max(max_stage, key_type.stage)
+
+            if key_type.stage == -1:
+                custom_records[key_type.type_name] = value
+            else:
+                custom_records[key_type.type_name][key_type.stage] = value
+                max_stage = max(max_stage, key_type.stage)
         
 
         self.custom_records = dict()
         for type_name in custom_records:
             record_entry = custom_records[type_name]
-            for i in range(max_stage):
-                b = record_entry.get(i + 1)
-                a = record_entry.get(i)
-                if a is None or b is None:
-                    break
-                t = BlockCustomEventRecordType(type_name, i)
-                self.custom_records[t] = (b - a) / BASE
+            if type(record_entry) is not dict:
+                t = BlockCustomEventRecordType(type_name, -1)
+                self.custom_records[t] = record_entry
+            else:
+                for i in range(max_stage):
+                    b = record_entry.get(i + 1)
+                    a = record_entry.get(i)
+                    if a is None or b is None:
+                        break
+                    t = BlockCustomEventRecordType(type_name, i)
+                    self.custom_records[t] = (b - a) / BASE
 
     @staticmethod
     def parse(text):

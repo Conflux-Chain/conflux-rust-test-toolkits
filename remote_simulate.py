@@ -263,7 +263,13 @@ class RemoteSimulate(ConfluxTestFramework):
             self.log.info(self.confirm_info.progress())
             time.sleep(0.5)
 
+    def rpc_bench_test(self):
+        pssh(self.options.ips_file, f"./conflux_rpc_stress.sh")
+
     def run_test(self):
+        # run rpc bench test at the start.
+        self.rpc_bench_test()
+
         # setup monitor to report the current block count periodically
         cur_block_count = self.nodes[0].test_getBlockCount()
         # The monitor will check the block_count of nodes[0]

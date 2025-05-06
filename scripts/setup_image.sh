@@ -36,10 +36,20 @@ sudo apt install -y cgroup-tools
 cargo install flamegraph
 echo -1 | sudo tee /proc/sys/kernel/perf_event_paranoid
 
+
+# Build rpc bench tool
+if [[ ! -d conflux-rust-rpc-stress ]]; then
+  git clone https://github.com/Conflux-Chain/conflux-rust-rpc-stress.git
+fi
+cd conflux-rust-rpc-stress
+git reset --hard
+cargo build --release
+cp ./target/release/conflux-rust-rpc-stress ~/conflux-rpc-stress
+cd ..
+
 if [[ ! -d conflux-rust ]]; then
   git clone https://github.com/Conflux-Chain/conflux-rust
 fi
-
 cd conflux-rust
 git reset --hard
 if [ $repo == "https://github.com/Conflux-Chain/conflux-rust" ]; then
@@ -57,7 +67,8 @@ export RUSTFLAGS="-g" && cargo build --release #--features "deadlock_detection"
 ./dev-support/dep_pip3.sh
 cd tests/extra-test-toolkits/scripts
 wget https://s3-ap-southeast-1.amazonaws.com/conflux-test/genesis_secrets.txt
-cp ../../../target/release/conflux throttle_bitcoin_bandwidth.sh remote_start_conflux.sh remote_collect_log.sh stat_latency_map_reduce.py genesis_secrets.txt ~
+cp ../../../target/release/conflux throttle_bitcoin_bandwidth.sh remote_start_conflux.sh remote_collect_log.sh \
+  stat_latency_map_reduce.py genesis_secrets.txt conflux_rpc_stress.sh ~
 
 # Remove process number limit.
 echo "LABEL=cloudimg-rootfs   /        ext4   defaults,noatime,nodiratime,barrier=0       0 0" > fstab

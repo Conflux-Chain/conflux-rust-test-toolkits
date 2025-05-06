@@ -221,25 +221,32 @@ class Statistics:
         return result
 
 class NodeLogMapper:
-    def __init__(self, log_file:str):
+    def __init__(self, path:str):
+        log_file = os.path.join(path, "conflux.log")
+        rpc_stress_file = os.path.join(path, "rpc_stress.log")
         assert os.path.exists(log_file), "log file not found: {}".format(log_file)
         self.log_file = log_file
+        self.rpc_stress_file = rpc_stress_file
 
         self.blocks = {}
         self.txs = {}
         self.by_block_ratio=[]
         self.sync_cons_gaps = []
+        self.qps = []
 
     @staticmethod
-    def mapf(log_file:str):
-        mapper = NodeLogMapper(log_file)
+    def mapf(path:str):
+        mapper = NodeLogMapper(path)
         mapper.map()
         return mapper
 
     def map(self):
         with open(self.log_file, "r", encoding='UTF-8') as file:
             for line in file.readlines():
-                    self.parse_log_line(line)
+                self.parse_log_line(line)
+        with open(self.rpc_stress_file, "r", encoding='UTF-8') as file:
+            for line in file.readlines():
+                self.parse_rpc_stress_log_line(line)
 
     def parse_log_line(self, line:str):
         if "transaction received by block" in line:
@@ -267,6 +274,11 @@ class NodeLogMapper:
             tx = Transaction.receive(line)
             Transaction.add_or_replace(self.txs, tx)
 
+    def parse_rpc_stress_log_line(self, line:str):
+        if line.startswith("QPS:"):
+            qps = float(parse_value(line, "QPS: ", ","))
+            self.qps.append(qps)
+
 
 class HostLogReducer:
     def __init__(self, node_mappers:list):
@@ -276,11 +288,13 @@ class HostLogReducer:
         self.txs = {}
         self.sync_cons_gap_stats = []
         self.by_block_ratio = []
+        self.qps = []
 
     def reduce(self):
         for mapper in self.node_mappers:
             self.sync_cons_gap_stats.append(Statistics(mapper.sync_cons_gaps))
             self.by_block_ratio.extend(mapper.by_block_ratio)
+            self.qps.append(Statistics(mapper.qps))
 
             for b in mapper.blocks.values():
                 Block.add_or_merge(self.blocks, b)
@@ -294,6 +308,7 @@ class HostLogReducer:
             "sync_cons_gap_stats": self.sync_cons_gap_stats,
             "txs": self.txs,
             "by_block_ratio": self.by_block_ratio,
+            "qps": self.qps,
         }
 
         with open(output_file, "w") as fp:
@@ -331,6 +346,11 @@ class HostLogReducer:
             tx.__dict__ = tx_dict
             reducer.txs[tx.hash] = tx
 
+        for stat_dict in data["qps"]:
+            stat = Statistics([1])
+            stat.__dict__ = stat_dict
+            reducer.qps.append(stat)
+
         return reducer
 
     @staticmethod
@@ -345,8 +365,8 @@ class HostLogReducer:
         for (path, _, files) in os.walk(log_dir):
             for f in files:
                 if f == "conflux.log":
-                    log_file = os.path.join(path, f)
-                    futures.append(executor.submit(NodeLogMapper.mapf, log_file))
+                    futures.append(executor.submit(NodeLogMapper.mapf, path))
+
 
         mappers = []
         for f in futures:
@@ -363,6 +383,7 @@ class LogAggregator:
         self.blocks = {}
         self.txs = {}
         self.sync_cons_gap_stats = []
+        self.qps = []
 
         # [latency_type, [block_hash, latency_stat]]
         self.block_latency_stats = {}
@@ -381,6 +402,7 @@ class LogAggregator:
 
     def add_host(self, host_log:HostLogReducer):
         self.sync_cons_gap_stats.extend(host_log.sync_cons_gap_stats)
+        self.qps.extend(host_log.qps)
 
 
         for b in host_log.blocks.values():
@@ -422,6 +444,14 @@ class LogAggregator:
         data = []
 
         for stat in self.sync_cons_gap_stats:
+            data.append(stat.get(p))
+
+        return Statistics(data)
+
+    def stat_qps(self, p:Percentile):
+        data = []
+
+        for stat in self.qps:
             data.append(stat.get(p))
 
         return Statistics(data)

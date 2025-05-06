@@ -31,7 +31,6 @@ class MessageTest(ConfluxTestFramework):
         kwargs['dstport'] = 32323
         kwargs['dstaddr'] = '127.0.0.1'
         default_node.peer_connect(*args, **kwargs)
-        network_thread_start()
         default_node.wait_for_status()
 
         # Start rpc connection

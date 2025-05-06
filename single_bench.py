@@ -51,7 +51,6 @@ class SingleBench(ConfluxTestFramework):
             conn = DefaultNode(genesis)
             p2p_connections.append(conn)
             self.node.add_p2p_connection(conn)
-        network_thread_start()
         for p2p in p2p_connections:
             p2p.wait_for_status()
 

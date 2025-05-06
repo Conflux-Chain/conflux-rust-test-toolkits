@@ -44,7 +44,7 @@ fi
 cd conflux-rust-rpc-stress
 git reset --hard
 cargo build --release
-cp ./target/release/conflux-rust-rpc-stress ~
+cp ./target/release/conflux-rust-rpc-stress ~/conflux-rpc-stress
 cd ..
 
 if [[ ! -d conflux-rust ]]; then

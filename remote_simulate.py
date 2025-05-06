@@ -264,7 +264,7 @@ class RemoteSimulate(ConfluxTestFramework):
             time.sleep(0.5)
 
     def rpc_bench_test(self):
-        pssh(self.options.options.ips_file, f"./conflux_rpc_stress.sh")
+        pssh(self.options.ips_file, f"./conflux_rpc_stress.sh")
 
     def run_test(self):
         # run rpc bench test at the start.

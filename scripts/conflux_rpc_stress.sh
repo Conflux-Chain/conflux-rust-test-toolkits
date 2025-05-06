@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # Find all conflux.conf files matching the pattern
-find . -path "*/conflux*/node*/conflux.conf" | while read -r conf_file; do
+find /tmp/conflux_test_* -name "conflux.conf" | while read -r conf_file; do
     # Extract the port number
     port=$(grep "jsonrpc_local_http_port=" "$conf_file" | cut -d'=' -f2)
 
@@ -14,7 +14,7 @@ find . -path "*/conflux*/node*/conflux.conf" | while read -r conf_file; do
     # Check if port was found
     if [[ -n "$port" ]]; then
         echo "Running stress test for config: $conf_file with port: $port"
-        ./conflux-rust-rpc-stress --url http://localhost:$port -m 10 > "$log_file"
+        ./conflux-rpc-stress --url http://localhost:$port -m 10 > "$log_file"
     else
         echo "No port found in $conf_file, skipping..."
     fi

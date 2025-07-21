@@ -1,5 +1,8 @@
 #!/usr/bin/env python3
 import sys, os
+
+from conflux.address import b32_address_to_hex
+
 sys.path.insert(1, os.path.dirname(sys.path[0]))
 
 from argparse import ArgumentParser, SUPPRESS
@@ -77,6 +80,7 @@ class RemoteSimulate(ConfluxTestFramework):
         egress_max_throttle = 1024,
         egress_queue_capacity = 2048,
         genesis_secrets = "/home/ubuntu/genesis_secrets.txt",
+        erc20_address = "0x86b1e6971681f48a2ac8cd90993ac4a339d920c2",
         send_tx_period_ms = 1300,
         txgen_account_count = 1000,
         tx_pool_size = conflux.config.default_conflux_conf["tx_pool_size"],
@@ -269,6 +273,11 @@ class RemoteSimulate(ConfluxTestFramework):
     def run_test(self):
         # run rpc bench test at the start.
         self.rpc_bench_test()
+        TokenContract = self.cfx_contract("MyToken")
+        tx_hash = TokenContract.constructor(self.cw3.to_checksum_address(b32_address_to_hex(self.core_accounts[0].address))).transact()
+        receipt = tx_hash.executed(timeout=30)
+        assert_equal(b32_address_to_hex(receipt["contractCreated"]), "0x86b1e6971681f48a2ac8cd90993ac4a339d920c2")
+
 
         # setup monitor to report the current block count periodically
         cur_block_count = self.nodes[0].test_getBlockCount()
